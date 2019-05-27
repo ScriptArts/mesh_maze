@@ -31,9 +31,9 @@ from .mesh_maze import generate_maze
 bl_info = {
     "name": "Maze any Mesh",
     "author": "elfnor <elfnor.com>",
-    "version": (1, 1),
-    "blender": (2, 7, 8),
-    "location": "View3D > EditMode > (w) Specials",
+    "version": (1, 2),
+    "blender": (2, 80, 0),
+    "location": "View3D EditMesh Menu -> Maze mesh selection",
     "description": "Convert any mesh to a maze pattern",
     "warning": "",
     "category": "Mesh",
@@ -58,10 +58,10 @@ class MESH_OT_maze_mesh(bpy.types.Operator):
 
     # properties for bevel operator
     offset_modes = (
-        ("0", "Offset", "Width is offset of new edges from original", 1),
-        ("1", "Width", "Width is width of new face", 2),
-        ("2", "Depth", "Width is distance from original edge to bevel face", 3),
-        ("3", "Percent", "Width is percent of adjacent edge length", 4)
+        ("OFFSET", "Offset", "Width is offset of new edges from original", 1),
+        ("WIDTH", "Width", "Width is width of new face", 2),
+        ("DEPTH", "Depth", "Width is distance from original edge to bevel face", 3),
+        ("PERCENT", "Percent", "Width is percent of adjacent edge length", 4)
     )
 
     wall_types = (
@@ -156,29 +156,29 @@ class MESH_OT_maze_mesh(bpy.types.Operator):
         """draw tool operator panel"""
         layout = self.layout
 
-        box_maze = layout.box()
-        box_maze.label('Maze Parameters')
-        box_maze.prop(self, 'rseed')
-        box_maze.prop(self, 'braid')
-        box_maze.prop(self, 'boundary_type')
-        box_maze.prop(self, 'options')
+        col = layout.column()
 
-        box_path = layout.box()
-        box_path.label('Path Paramters')
-        box_path.prop(self, 'offset_type', text='')
-        box_path.prop(self, 'offset')
-        if self.options:
-            box_path.prop(self, 'use_clamp_overlap')
-            box_path.prop(self, 'use_loop_slide')
+        # row = col.row()
+        col.label(text='Maze Parameters')
+        col.prop(self, 'rseed')
+        col.prop(self, 'braid')
+        col.prop(self, 'boundary_type')
+        col.prop(self, 'options')
 
-        box_wall = layout.box()
-        box_wall.label('Wall Paramters')
-        box_wall.prop(self, 'use_relative_offset')
-        box_wall.prop(self, 'depth')
+        col.label(text='Path Paramters')
+        col.prop(self, 'offset_type', text='')
+        col.prop(self, 'offset')
         if self.options:
-            box_wall.prop(self, 'use_even_offset')
-            box_wall.prop(self, 'thickness')
-            box_wall.prop(self, 'use_outset')
+            col.prop(self, 'use_clamp_overlap')
+            col.prop(self, 'use_loop_slide')
+
+        col.label(text='Wall Paramters')
+        col.prop(self, 'use_relative_offset')
+        col.prop(self, 'depth')
+        if self.options:
+            col.prop(self, 'use_even_offset')
+            col.prop(self, 'thickness')
+            col.prop(self, 'use_outset')
 
     def get_maze_params(self):
         """
@@ -190,7 +190,7 @@ class MESH_OT_maze_mesh(bpy.types.Operator):
         maze_params['link_centers'] = self.link_centers
         maze_params['vert_centers'] = self.vert_centers
         maze_params['offset'] = self.offset
-        maze_params['offset_type'] = int(self.offset_type)
+        maze_params['offset_type'] = self.offset_type
         maze_params['use_loop_slide'] = self.use_loop_slide
         maze_params['use_clamp_overlap'] = self.use_clamp_overlap
         maze_params['boundary_type'] = int(self.boundary_type)
@@ -214,7 +214,7 @@ class MESH_OT_maze_mesh(bpy.types.Operator):
             self.update = True
         maze_params = self.get_maze_params()
         bpy.ops.mesh.select_mode(type='EDGE')
-    
+
         bm, self.link_centers, self.vert_centers = generate_maze(bm, maze_params)
         self.update = False
 
@@ -231,13 +231,13 @@ def menu_func(self, context):
 def register():
     """ add to specials menu"""
     bpy.utils.register_class(MESH_OT_maze_mesh)
-    bpy.types.VIEW3D_MT_edit_mesh_specials.prepend(menu_func)
+    bpy.types.VIEW3D_MT_edit_mesh.prepend(menu_func)
 
 
 def unregister():
     """ remove from specials menu"""
     bpy.utils.unregister_class(MESH_OT_maze_mesh)
-    bpy.types.VIEW3D_MT_edit_mesh_specials.remove(menu_func)
+    bpy.types.VIEW3D_MT_edit_mesh.remove(menu_func)
     print('unregistered')
 
 
